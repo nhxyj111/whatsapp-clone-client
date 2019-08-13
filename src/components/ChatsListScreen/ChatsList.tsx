@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
 import gql from 'graphql-tag';
-import { useQuery } from '@apollo/react-hooks';
 // import { chats } from '../../db';
 import moment from 'moment';
 import { List, ListItem } from '@material-ui/core';
 import styled from 'styled-components';
 import { History } from 'history';
+import { useChatsQuery } from '../../graphql/types';
 
 const Container = styled.div`
   height: calc(100% - 56px);
@@ -79,7 +79,7 @@ interface ChatsListProps {
 }
 
 const ChatsList: React.FC<ChatsListProps> = ({ history }) => {
-  const { data } = useQuery<any>(getChatsQuery);
+  const { data } = useChatsQuery();
 
   const navToChat = useCallback(chat => {
     history.push(`chats/${chat.id}`)
