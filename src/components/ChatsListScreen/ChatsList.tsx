@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { chats } from '../../db';
+import React, { useState, useMemo, useCallback } from 'react';
+// import { chats } from '../../db';
 import moment from 'moment';
 import { List, ListItem } from '@material-ui/core';
 import styled from 'styled-components';
+import { History } from 'history';
 
 const Container = styled.div`
   height: calc(100% - 56px);
@@ -56,20 +57,53 @@ const MessageDate = styled.div`
   font-size: 13px;
 `;
 
-const ChatsList = () => {
+const getChatsQuery = `
+  query GetChats {
+    chats {
+      id
+      name
+      picture
+      lastMessage {
+        id
+        content
+        createdAt
+      }
+    }
+  }
+`;
+
+interface ChatsListProps {
+  history: History
+}
+
+const ChatsList: React.FC<ChatsListProps> = ({ history }) => {
   const [chats, setChats] = useState<any[]>([]);
 
   useMemo(async () => {
-    const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/chats`);
-    const chats = await body.json();
+    // const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/chats`);
+    // const chats = await body.json();
+    const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: getChatsQuery }),
+    });
+    const {
+      data: { chats },
+    } = await body.json();
     setChats(chats);
   }, [])
+
+  const navToChat = useCallback(chat => {
+    history.push(`chats/${chat.id}`)
+  }, [history])
 
   return (
     <Container>
       <StyledList>
         {chats.map(chat => (
-          <StyledListItem key={chat.id} button>
+          <StyledListItem key={chat.id} button onClick={navToChat.bind(null, chat)}>
             <ChatPicture src={chat.picture} alt="Profile" />
             <ChatInfo>
               <ChatName>{chat.name}</ChatName>
