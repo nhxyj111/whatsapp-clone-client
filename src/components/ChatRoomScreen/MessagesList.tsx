@@ -1,7 +1,7 @@
 import moment from 'moment';
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 // import { ChatQueryMessage } from './index';
 
 const Container = styled.div`
@@ -11,9 +11,13 @@ const Container = styled.div`
   padding: 0 15px;
 `;
 
+type StyledProp = {
+  isMine: any;
+};
+
 const MessageItem = styled.div`
-  float: right;
-  background-color: #dcf8c6;
+  /* float: right;
+  background-color: #dcf8c6; */
   display: inline-block;
   position: relative;
   max-width: 100%;
@@ -28,16 +32,34 @@ const MessageItem = styled.div`
     clear: both;
   }
   &::before {
-    background-image: url(/assets/message-mine.png);
+    /* background-image: url(/assets/message-mine.png); */
     content: '';
     position: absolute;
     bottom: 3px;
     width: 12px;
     height: 19px;
-    right: -11px;
+    /* right: -11px; */
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: contain;
+  }
+  ${(props: StyledProp) => props.isMine
+    ? css`
+      float: right;
+      background-color: #dcf8c6;
+      &::before {
+        right: -11px;
+        background-image: url(/assets/message-mine.png);
+      }
+    `
+    : css`
+      float: left;
+      background-color: #fff;
+      &::before {
+        left: -11px;
+        background-image: url(/assets/message-other.png);
+      }
+    `
   }
 `;
 
@@ -80,7 +102,7 @@ const MessagesList: React.FC<MessagesListProps> = ({ messages }) => {
   return (
     <Container ref={selfRef}>
       {messages.map((message: any) => (
-        <MessageItem key={message.id}>
+        <MessageItem key={message.id} isMine={message.isMine}>
           <Contents>{message.content}</Contents>
           <Timestamp>{moment(message.createdAt).format('HH:mm')}</Timestamp>
         </MessageItem>
