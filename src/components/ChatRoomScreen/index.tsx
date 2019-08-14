@@ -3,6 +3,7 @@ import React from 'react';
 // import { defaultDataIdFromObject } from 'apollo-cache-inmemory';
 import { useCallback } from 'react';
 // import { useQuery, useMutation } from '@apollo/react-hooks';
+import { Redirect } from 'react-router-dom';
 import styled from 'styled-components';
 import ChatNavbar from './ChatNavbar';
 import MessageInput from './MessageInput';
@@ -94,6 +95,10 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
 
   if (loadingChat) return null;
   if (chat === null) return null;
+
+  if (!chat) {
+    return <Redirect to='/chats' />
+  }
 
   return (
     <Container>

@@ -3,8 +3,9 @@ import { BrowserRouter, Route, Redirect, RouteComponentProps } from 'react-route
 import ChatRoomScreen from './components/ChatRoomScreen';
 import AuthScreen from './components/AuthScreen';
 import ChatsListScreen from './components/ChatsListScreen';
+import ChatCreationScreen from './components/ChatCreationScreen';
 import AnimatedSwitch from './components/AnimatedSwitch';
-import { useCacheService } from './services/cache.service';
+// import { useCacheService } from './services/cache.service';
 import { withAuth } from './services/auth.service';
 
 const App: React.FC = () => {
@@ -24,6 +25,7 @@ const App: React.FC = () => {
             )
           )}
         />
+        <Route exact path="/new-chat" component={withAuth(ChatCreationScreen)} />
       </AnimatedSwitch>
       <Route exact path="/" render={redirectToChats} />
     </BrowserRouter>

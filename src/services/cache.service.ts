@@ -3,7 +3,7 @@ import { defaultDataIdFromObject } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
 import * as fragments from '../graphql/fragments';
 import * as queries from '../graphql/queries';
-import { MessageFragment, useMessageAddedSubscription } from '../graphql/types';
+import { MessageFragment, useMessageAddedSubscription, ChatFragment, useChatAddedSubscription, useChatRemovedSubscription } from '../graphql/types';
 
 type Client = ApolloClient<any> | DataProxy;
 
@@ -14,6 +14,22 @@ export const useCacheService = () => {
         writeMessage(client, data.messageAdded);
       }
     },
+  });
+
+  useChatAddedSubscription({
+    onSubscriptionData: ({ client, subscriptionData: { data } }) => {
+      if (data) {
+        writeChat(client, data.chatAdded);
+      }
+    }
+  });
+
+  useChatRemovedSubscription({
+    onSubscriptionData: ({ client, subscriptionData: { data } }) => {
+      if (data) {
+        eraseChat(client, data.chatRemoved);
+      }
+    }
   });
 };
 
@@ -84,3 +100,82 @@ export const writeMessage = (client: Client, message: MessageFragment) => {
     data: { chats: chats },
   });
 };
+
+export const writeChat = (client: Client, chat: ChatFragment) => {
+  const chatId = defaultDataIdFromObject(chat);
+  if (chatId === null) {
+    return;
+  }
+
+  client.writeFragment({
+    id: chatId,
+    fragment: fragments.chat,
+    fragmentName: 'Chat',
+    data: chat,
+  });
+
+  let data;
+  try {
+    data = client.readQuery({
+      query: queries.chats,
+    });
+  } catch (e) {
+    return;
+  }
+
+  if (!data) return;
+
+  const chats = data.chats;
+
+  if (!chats) return;
+  if (chats.some((c: any) => c.id === chat.id)) return;
+
+  chats.unshift(chat);
+
+  client.writeQuery({
+    query: queries.chats,
+    data: { chats },
+  });
+}
+
+
+export const eraseChat = (client: Client, chatId: string) => {
+  const chatType = {
+    __typename: 'Chat',
+    id: chatId
+  }
+
+  const chatIdFromObject = defaultDataIdFromObject(chatType)
+  if (chatIdFromObject === null) {
+    return
+  }
+
+  client.writeFragment({
+    id: chatIdFromObject,
+    fragment: fragments.fullChat,
+    fragmentName: 'FullChat',
+    data: null
+  })
+
+  let data;
+  try {
+    data = client.readQuery({
+      query: queries.chats,
+    })
+  } catch (e) {
+    return
+  }
+
+  if (!data || !data.chats) return
+
+  const chats = data.chats
+
+  if (!chats) return
+
+  const chatIndex = chats.findIndex((c: any) => c.id === chatId);
+  chats.splice(chatIndex, 1)
+  client.writeQuery({
+    query: queries.chats,
+    data: { chats: chats }
+  })
+}
